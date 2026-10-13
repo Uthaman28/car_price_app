@@ -22,7 +22,7 @@ with st.form("car_form"):
     submit_button = st.form_submit_button(label="Predict Price")
 
 if submit_button:
-    # Model പ്രതീക്ഷിക്കുന്ന കൃത്യമായ columns അനുസരിച്ചുള്ള Input Dataframe
+    # Model കൃത്യമായി പ്രതീക്ഷിക്കുന്ന അതേ ഓർഡറിലുള്ള Columns
     input_data = {
         'Year': [year],
         'Engine Size': [engine_size],
