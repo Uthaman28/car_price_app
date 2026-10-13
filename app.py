@@ -2,35 +2,35 @@ import streamlit as st
 import pickle
 import numpy as np
 
-# മോഡൽ ലോഡ് ചെയ്യുക
+# Load the trained model
 model = pickle.load(open('car_model.pkl', 'rb'))
 
 st.title("🚗 Used Car Price Prediction App")
-st.write("കാറിന്റെ വിവരങ്ങൾ നൽകി അതിന്റെ വില എത്രയെന്ന് അറിയാം!")
+st.write("Enter the car details below to predict its estimated price!")
 
-# യൂസർ ഇൻപുട്ടുകൾ സ്വീകരിക്കാൻ Form ഉണ്ടാക്കുക
+# Create form for user inputs
 with st.form("car_form"):
-    year = st.number_input("കാർ നിർമ്മിച്ച വർഷം (Year):", min_value=2000, max_value=2026, value=2018)
-    kms = st.number_input("ഓടിയ കിലോമീറ്റർ (Kilometers Driven):", min_value=0, max_value=500000, value=30000)
-    owner = st.selectbox("ഉടമസ്ഥത (Owner Type):", [1, 2, 3])
-    present_price = st.number_input("ഷോറൂം വില / നിലവിലെ വില (Lakhs):", min_value=0.1, max_value=100.0, value=8.0)
+    year = st.number_input("Car Manufacturing Year:", min_value=2000, max_value=2026, value=2018)
+    kms = st.number_input("Kilometers Driven:", min_value=0, max_value=500000, value=30000)
+    owner = st.selectbox("Owner Type:", [1, 2, 3])
+    present_price = st.number_input("Present Showroom Price (Lakhs):", min_value=0.1, max_value=100.0, value=8.0)
     
-    fuel_type = st.selectbox("ഇന്ധനം (Fuel Type):", ["Petrol", "Diesel", "Other"])
-    transmission = st.selectbox("ഗിയർ ബോക്സ് (Transmission):", ["Manual", "Automatic"])
+    fuel_type = st.selectbox("Fuel Type:", ["Petrol", "Diesel", "Other"])
+    transmission = st.selectbox("Transmission:", ["Manual", "Automatic"])
     
-    submit_button = st.form_submit_button(label="വില പ്രവചിക്കുക (Predict Price)")
+    submit_button = st.form_submit_button(label="Predict Price")
 
-# പ്രവചനം നടത്തുന്ന ഭാഗം
+# Prediction logic
 if submit_button:
-    # Fuel Type-നും Transmission-നും ഉള്ള Encoding
+    # Encoding for Fuel Type and Transmission
     fuel_diesel = 1 if fuel_type == "Diesel" else 0
     trans_manual = 1 if transmission == "Manual" else 0
     
-    # അറേ തയ്യാറാക്കുക
+    # Prepare feature array
     features = np.array([[year, kms, owner, present_price, fuel_diesel, trans_manual]])
     
-    # പ്രവചനം
+    # Make prediction
     prediction = model.predict(features)
     output = round(prediction[0], 2)
     
-    st.success(f"🏷️ ഈ കാറിന്റെ আনুമാനിക വില: **₹ {output} ലക്ഷം**")
+    st.success(f"🏷️ Estimated Car Price: **₹ {output} Lakhs**")
