@@ -1,55 +1,50 @@
 import streamlit as st
 import pickle
 import numpy as np
+import pandas as pd
 
-st.title("🚗 Used Car Price Prediction App")
-st.write("Enter the car details below to predict its estimated price!")
+# Load model
+model = pickle.load(open('car_model.pkl', 'rb'))
 
-# Form for User Inputs
+st.title("🚗 Advanced Used Car Price Prediction App")
+st.write("Enter the car details below to get an accurate estimated price!")
+
 with st.form("car_form"):
-    # Brand and Model Inputs
-    brand = st.selectbox("Car Brand:", ["Maruti", "Hyundai", "Honda", "Toyota", "Ford", "Other"])
-    car_model = st.text_input("Car Model (e.g., Swift, City, Innova):", value="Swift")
+    # Dropdowns based on your dataset
+    make = st.selectbox("Car Brand (Make):", ['Honda', 'Ford', 'BMW', 'Audi', 'Toyota'])
+    model_name = st.selectbox("Car Model:", ['Model A', 'Model B', 'Model C', 'Model D', 'Model E'])
     
-    year = st.number_input("Car Manufacturing Year:", min_value=2000, max_value=2026, value=2018)
-    kms = st.number_input("Kilometers Driven:", min_value=0, max_value=500000, value=30000)
-    owner = st.selectbox("Owner Type:", [1, 2, 3])
-    present_price = st.number_input("Present Showroom Price (Lakhs):", min_value=0.1, max_value=100.0, value=8.0)
+    year = st.number_input("Car Manufacturing Year:", min_value=2000, max_value=2026, value=2015)
+    engine_size = st.number_input("Engine Size (L):", min_value=1.0, max_value=5.0, value=2.5)
+    mileage = st.number_input("Mileage (Driven KM):", min_value=0, max_value=300000, value=50000)
     
-    fuel_type = st.selectbox("Fuel Type:", ["Petrol", "Diesel", "Other"])
-    transmission = st.selectbox("Transmission:", ["Manual", "Automatic"])
-    
-    # Car Complaints/Issues Input
-    has_complaints = st.radio("Major Mechanical Issues / Past Accidents?", ["No", "Yes"])
+    fuel_type = st.selectbox("Fuel Type:", ['Petrol', 'Diesel', 'Electric'])
+    transmission = st.selectbox("Transmission:", ['Manual', 'Automatic'])
     
     submit_button = st.form_submit_button(label="Predict Price")
 
-# Prediction logic
 if submit_button:
-    # Load model
-    try:
-        model = pickle.load(open('car_model.pkl', 'rb'))
-        
-        fuel_diesel = 1 if fuel_type == "Diesel" else 0
-        trans_manual = 1 if transmission == "Manual" else 0
-        complaint_val = 1 if has_complaints == "Yes" else 0
-        
-        # Prepare feature array
-        features = np.array([[year, kms, owner, present_price, fuel_diesel, trans_manual, complaint_val]])
-        
-        # Make prediction
-        prediction = model.predict(features)
-        output = round(prediction[0], 2)
-        
-        # Adjust price slightly if complaints exist
-        if complaint_val == 1:
-            output = round(output * 0.85, 2) # Reduce 15% price for complaints
-            
-        st.success(f"🏷️ Estimated Price for **{brand} {car_model}**: **₹ {output} Lakhs**")
-        
-        if complaint_val == 1:
-            st.warning("⚠️ Note: Price is lower due to reported issues/accidents.")
-            
-    except Exception as e:
-        st.error("Please train and update the model with the new features.")
-
+    # Creating a dummy dataframe matching training columns to handle encoding cleanly
+    input_data = pd.DataFrame([[make, model_name, year, engine_size, mileage, fuel_type, transmission]],
+                              columns=['Make', 'Model', 'Year', 'Engine Size', 'Mileage', 'Fuel Type', 'Transmission'])
+    
+    # We need dummy columns matching the trained model's columns structure
+    # A simple way in Streamlit is to load base columns or structure manual encoding:
+    # Let's map manually based on standard pandas get_dummies logic used during training:
+    
+    # Simulating the encoded array columns mapping
+    # To keep it robust with get_dummies:
+    full_df = pd.read_csv('Car_Price_Prediction.csv')
+    full_df_encoded = pd.get_dummies(full_df.drop('Price', axis=1), drop_first=True)
+    
+    input_encoded = pd.concat([input_data, full_df_encoded], ignore_index=True)
+    input_encoded = pd.get_dummies(input_encoded, columns=['Make', 'Model', 'Fuel Type', 'Transmission'], drop_first=True)
+    
+    # Take only the first row (our input row)
+    final_input = input_encoded.iloc[[0]].fillna(0)
+    
+    # Prediction
+    prediction = model.predict(final_input)
+    output = round(prediction[0], 2)
+    
+    st.success(f"🏷️ Estimated Car Price: **₹ {output:,}**")
