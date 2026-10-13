@@ -22,27 +22,19 @@ with st.form("car_form"):
     submit_button = st.form_submit_button(label="Predict Price")
 
 if submit_button:
-    # Model കൃത്യമായി പ്രതീക്ഷിക്കുന്ന അതേ ഓർഡറിലുള്ള Columns
-    input_data = {
-        'Year': [year],
-        'Engine Size': [engine_size],
-        'Mileage': [mileage],
-        'Make_BMW': [1 if make == 'BMW' else 0],
-        'Make_Ford': [1 if make == 'Ford' else 0],
-        'Make_Honda': [1 if make == 'Honda' else 0],
-        'Make_Toyota': [1 if make == 'Toyota' else 0],
-        'Model_Model B': [1 if model_name == 'Model B' else 0],
-        'Model_Model C': [1 if model_name == 'Model C' else 0],
-        'Model_Model D': [1 if model_name == 'Model D' else 0],
-        'Model_Model E': [1 if model_name == 'Model E' else 0],
-        'Fuel Type_Electric': [1 if fuel_type == 'Electric' else 0],
-        'Fuel Type_Petrol': [1 if fuel_type == 'Petrol' else 0],
-        'Transmission_Manual': [1 if transmission == 'Manual' else 0]
-    }
+    # 1. User input dataframe ഉണ്ടാക്കുന്നു
+    input_data = pd.DataFrame([[make, model_name, year, engine_size, mileage, fuel_type, transmission]],
+                              columns=['Make', 'Model', 'Year', 'Engine Size', 'Mileage', 'Fuel Type', 'Transmission'])
     
-    final_input = pd.DataFrame(input_data)
+    # 2. Original dataset-മായി ചേർത്ത് ഒരേപോലെ get_dummies ചെയ്യുന്നു (Columns match ചെയ്യാൻ)
+    df_train = pd.read_csv('Car_Price_Prediction.csv')
+    df_combined = pd.concat([input_data, df_train.drop('Price', axis=1)], ignore_index=True)
     
-    # Prediction
+    df_encoded = pd.get_dummies(df_combined, columns=['Make', 'Model', 'Fuel Type', 'Transmission'], drop_first=True)
+    
+    # 3. User input ചെയ്ത ആദ്യത്തെ row മാത്രം എടുത്തു പ്രെഡിക്റ്റ് ചെയ്യുന്നു
+    final_input = df_encoded.iloc[[0]]
+    
     prediction = model.predict(final_input)
     output = round(prediction[0], 2)
     
