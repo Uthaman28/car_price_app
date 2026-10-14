@@ -7,7 +7,7 @@ from sklearn.preprocessing import LabelEncoder
 model = pickle.load(open('car_model.pkl', 'rb'))
 
 # 2. ഡാറ്റാസെറ്റ് ലോഡ് ചെയ്യുന്നു (Small dataset used to avoid size limit)
-df = pd.read_csv('used_cars_small.csv')
+df = pd.read_csv('used_cars.csv')
 
 st.title("🚗 Advanced Real Used Car Price Prediction App")
 st.write("Select car details below to get an accurate estimated price!")
