@@ -39,7 +39,10 @@ if submit_button:
         input_data[col] = input_data[col].astype(str)
         input_data[col] = input_data[col].apply(lambda x: le.transform([x])[0] if x in le.classes_ else 0)
 
-    prediction = model.predict(input_data)
-    output = round(prediction[0], 2)
+    # Prediction in USD
+    prediction_usd = model.predict(input_data)[0]
     
-    st.success(f"🏷️ Estimated Car Price: **$ {output:,}**")
+    # Converting USD to INR (1 USD = ~85 INR)
+    prediction_inr = round(prediction_usd * 85, 2)
+    
+    st.success(f"🏷️ Estimated Car Price: **₹ {prediction_inr:,.2f}**")
