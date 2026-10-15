@@ -19,7 +19,7 @@ def load_data():
 model = load_model()
 df = load_data()
 
-st.title("🚗 CarDekho Accurate Price Prediction App")
+st.title("🚗 Used car's Price Prediction App")
 st.write("Enter your car details below to get the exact estimated market price in Indian Rupees (INR).")
 
 with st.form("car_form"):
