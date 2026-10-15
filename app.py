@@ -4,56 +4,58 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-# 1. Load Model, Scaler & Dataset
+# 1. Load Model & Dataset
 model = pickle.load(open('car_model.pkl', 'rb'))
-scaler = pickle.load(open('scaler.pkl', 'rb'))
-df = pd.read_csv('cars24data.csv')
+df = pd.read_csv('cardekho_dataset.csv')
+if 'Unnamed: 0' in df.columns:
+    df = df.drop(columns=['Unnamed: 0'])
 
-st.title("🚗 Cars24 Price Prediction App")
-st.write("Enter your car details below to get the estimated market price in Indian Rupees (INR).")
+st.title("🚗 CarDekho Accurate Price Prediction App")
+st.write("Enter your car details below to get the exact estimated market price in Indian Rupees (INR).")
 
 with st.form("car_form"):
-    models_list = sorted(df['Model Name'].dropna().unique())
-    selected_model_name = st.selectbox("Car Model Name:", models_list)
+    brand_list = sorted(df['brand'].dropna().unique())
+    selected_brand = st.selectbox("Select Brand:", brand_list)
     
-    manufacturing_year = st.number_input("Manufacturing Year:", min_value=2000, max_value=2026, value=2018)
-    engine_capacity = st.number_input("Engine Capacity (CC):", min_value=600, max_value=5000, value=1197)
-    km_driven = st.number_input("Total KM Driven:", min_value=100, max_value=500000, value=30000)
+    # Filter models based on selected brand
+    filtered_models = sorted(df[df['brand'] == selected_brand]['model'].dropna().unique())
+    selected_model = st.selectbox("Select Model:", filtered_models)
     
-    spare_key = st.selectbox("Spare Key Available?", ["Yes", "No"])
-    transmission = st.selectbox("Transmission Type:", sorted(df['Transmission'].dropna().unique()))
-    fuel_type = st.selectbox("Fuel Type:", sorted(df['Fuel type'].dropna().unique()))
+    vehicle_age = st.number_input("Vehicle Age (Years):", min_value=0, max_value=25, value=5)
+    km_driven = st.number_input("KM Driven:", min_value=100, max_value=500000, value=40000)
     
-    ownership = st.selectbox("Ownership (Number of Previous Owners):", [1, 2, 3, 4])
-    imperfections = st.number_input("Imperfections Count:", min_value=0, max_value=50, value=2)
-    repainted_parts = st.number_input("Repainted Parts Count:", min_value=0, max_value=20, value=1)
+    seller_type = st.selectbox("Seller Type:", sorted(df['seller_type'].dropna().unique()))
+    fuel_type = st.selectbox("Fuel Type:", sorted(df['fuel_type'].dropna().unique()))
+    transmission_type = st.selectbox("Transmission Type:", sorted(df['transmission_type'].dropna().unique()))
+    
+    mileage = st.number_input("Mileage (km/l or km/kg):", min_value=5.0, max_value=50.0, value=18.5)
+    engine = st.number_input("Engine Capacity (CC):", min_value=600, max_value=5000, value=1197)
+    max_power = st.number_input("Max Power (bhp):", min_value=30.0, max_value=400.0, value=82.0)
+    seats = st.selectbox("Seats:", [2, 4, 5, 6, 7, 8])
+    
+    car_name = selected_brand + " " + selected_model
     
     submit_button = st.form_submit_button(label="Predict Price")
 
 if submit_button:
-    # Input DataFrame creation
     input_data = pd.DataFrame([[
-        selected_model_name, manufacturing_year, engine_capacity, 
-        spare_key, transmission, km_driven, ownership, 
-        fuel_type, imperfections, repainted_parts
+        car_name, selected_brand, selected_model, vehicle_age, 
+        km_driven, seller_type, fuel_type, transmission_type, 
+        mileage, engine, max_power, seats
     ]], columns=[
-        'Model Name', 'Manufacturing_year', 'Engine capacity', 
-        'Spare key', 'Transmission', 'KM driven', 'Ownership', 
-        'Fuel type', 'Imperfections', 'Repainted Parts'
+        'car_name', 'brand', 'model', 'vehicle_age', 
+        'km_driven', 'seller_type', 'fuel_type', 'transmission_type', 
+        'mileage', 'engine', 'max_power', 'seats'
     ])
     
-    # Label Encoding matching original dataset categories
-    for col in ['Model Name', 'Spare key', 'Transmission', 'Fuel type']:
+    # Label encoding matching dataset categories
+    for col in ['car_name', 'brand', 'model', 'seller_type', 'fuel_type', 'transmission_type']:
         le = LabelEncoder()
-        le.fit(df[col].dropna().astype(str))
+        le.fit(df[col].astype(str))
         input_data[col] = input_data[col].astype(str)
         input_data[col] = input_data[col].apply(lambda x: le.transform([x])[0] if x in le.classes_ else 0)
     
-    # Scale input data
-    input_scaled = scaler.transform(input_data)
-    
-    # Prediction (Directly in INR)
-    prediction = model.predict(input_scaled)[0]
+    prediction = model.predict(input_data)[0]
     prediction_inr = round(prediction, 2)
     
     st.success(f"🏷️ Estimated Car Price: **₹ {prediction_inr:,.2f}**")
