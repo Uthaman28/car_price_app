@@ -4,11 +4,20 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-# 1. Load Model & Dataset
-model = pickle.load(open('car_model.pkl', 'rb'))
-df = pd.read_csv('cardekho_dataset.csv')
-if 'Unnamed: 0' in df.columns:
-    df = df.drop(columns=['Unnamed: 0'])
+# 1. Model-ഉം Data-യും Cache ചെയ്യാനുള്ള ഫങ്ഷനുകൾ (CPU Speed കൂട്ടാൻ)
+@st.cache_resource
+def load_model():
+    return pickle.load(open('car_model.pkl', 'rb'))
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv('cardekho_dataset.csv')
+    if 'Unnamed: 0' in df.columns:
+        df = df.drop(columns=['Unnamed: 0'])
+    return df
+
+model = load_model()
+df = load_data()
 
 st.title("🚗 CarDekho Accurate Price Prediction App")
 st.write("Enter your car details below to get the exact estimated market price in Indian Rupees (INR).")
